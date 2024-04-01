@@ -1,29 +1,30 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import { string } from 'zod';
 
-interface middleWareParams{
-    req: Request,
-    res: Response,
-    next: NextFunction
-
+interface JwtPayload {
+  data: string;
 }
 
-async function authMiddleWare({req, res, next}: middleWareParams){
-    const token = req.headers.authorization;
-    if(!token){
-        return res.status(401).json({
-            message: "Unauthorized"
-        });
-    }
+async function authMiddleWare(req: Request, res: Response, next: NextFunction){
 
-    try{
-        const user = jwt.verify(token, 'secret');
-        next();
-    }catch(err){
-        return res.status(401).json({
-            message: "Unauthorized"
-        });
+    if(req.headers.authorization&&  req.headers.authorization.length> 1){
+        const token = req.headers.authorization.split(' ')[1];
+        
+        try{
+            const decoded = jwt.verify(token, 'secret') as JwtPayload;
+            req.headers.userId = decoded.data;
+            console.log("Authenticated!")
+            next();
+
+        }catch(e){
+            console.log(e);
+            return res.json({message:"Bad Gateway"})
+        }        
+      
+    
     }
 }
+
 
 export {authMiddleWare};

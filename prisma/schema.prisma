@@ -16,7 +16,7 @@ datasource db {
 
 
 model User {
-  id  Int @id @default(autoincrement())
+  id  String @id @default(uuid())
   memberId Int @unique 
   hashedPassword String 
   firstName String
@@ -27,7 +27,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   posts Post[]
-
+  profile Profile?
 }
 
 enum Role {
@@ -38,7 +38,7 @@ enum Role {
 
 model Post {
   id Int @id @default(autoincrement()) @unique
-  creatorId Int @unique
+  creatorId String 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   creator User @relation(fields: [creatorId], references: [id])
@@ -53,4 +53,51 @@ model Comment {
   createdAt DateTime @default(now())
   content String
   post Post @relation(fields: [postId], references: [id])
+}
+
+// Profile Information data model
+model Profile{
+  id String @id @default(uuid())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id])
+  bio String
+  profilePicture String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  interests String[]
+  events String[]
+  socials String[]
+  projects String[]
+  roles String[]
+
+}
+
+
+// Event data model
+model Event {
+  id Int @id @default(autoincrement())
+  title String
+  description String
+  date DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // A relation which is an event can have many organizers
+  organizers String[]
+  volunteers String[]
+  speakers String[]
+}
+
+
+
+model Project {
+  id Int @id @default(autoincrement())
+  title String
+  description String
+  creatorId Int @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  creator String
+  collaborators String[]
+  events String[]
+  tags String[]
 }
