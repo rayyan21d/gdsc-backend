@@ -9,25 +9,25 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-
 model User {
-  id  String @id @default(uuid())
-  memberId Int @unique 
-  hashedPassword String 
-  firstName String
-  lastName String?
-  email String
-  phone String
-  role Role @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts Post[]
-  profile Profile?
+  userId         String    @id @default(uuid())
+  memberId       Int       @unique
+  hashedPassword String
+  firstName      String
+  lastName       String?
+  email          String
+  phone          String
+  role           Role      @default(USER)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  posts          Post[]
+  profile        Profile?
+  comments       Comment[]
 }
 
 enum Role {
@@ -36,68 +36,77 @@ enum Role {
   MOD
 }
 
+enum Vis {
+  PUBLIC
+  PRIVATE
+}
+
 model Post {
-  id Int @id @default(autoincrement()) @unique
-  creatorId String 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  creator User @relation(fields: [creatorId], references: [id])
-  title String
-  content String
-  comments Comment[]
+  postId       Int       @id @unique @default(autoincrement())
+  creatorId    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  creator      User      @relation(fields: [creatorId], references: [userId])
+  title        String
+  content      String
+  comments     Comment[]
+  visibility   Vis       @default(PRIVATE)
+  event        Event?    @relation(fields: [eventEventId], references: [eventId])
+  eventEventId Int?
 }
 
 model Comment {
-  id Int @unique
-  postId Int
+  commentId Int      @id @unique @default(autoincrement())
+  postId    Int
+  creatorId String
+  creator   User     @relation(fields: [creatorId], references: [userId])
   createdAt DateTime @default(now())
-  content String
-  post Post @relation(fields: [postId], references: [id])
+  content   String
+  post      Post     @relation(fields: [postId], references: [postId])
 }
 
 // Profile Information data model
-model Profile{
-  id String @id @default(uuid())
-  userId String @unique
-  user User @relation(fields: [userId], references: [id])
-  bio String
+model Profile {
+  profileId      String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [userId])
+  bio            String
   profilePicture String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  interests String[]
-  events String[]
-  socials String[]
-  projects String[]
-  roles String[]
-
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  interests      String[]
+  events         String[]
+  socials        String[]
+  projects       String[]
+  roles          String[]
 }
-
 
 // Event data model
 model Event {
-  id Int @id @default(autoincrement())
-  title String
+  eventId     Int      @id @default(autoincrement())
+  title       String
   description String
-  date DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   // A relation which is an event can have many organizers
-  organizers String[]
-  volunteers String[]
-  speakers String[]
+  creatorId   String
+  organizers  String[]
+  volunteers  String[]
+  speakers    String[]
+  postIds     Int
+  posts       Post[]
 }
 
-
-
 model Project {
-  id Int @id @default(autoincrement())
-  title String
-  description String
-  creatorId Int @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  creator String
+  projectId     Int      @id @default(autoincrement())
+  title         String
+  description   String
+  creatorId     Int      @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  creator       String
   collaborators String[]
-  events String[]
-  tags String[]
+  events        String[]
+  tags          String[]
 }

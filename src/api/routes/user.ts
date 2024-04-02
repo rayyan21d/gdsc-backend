@@ -21,8 +21,9 @@ userRouter.get("/", (req, res) => {
 
 const passwordSchema = z.string().min(6);
 const emailSchema = z.string().email();
-const firstName = z.string().max(20)
-const lastName = z.string().max(20)
+const firstNameSchema = z.string().max(20)
+const lastNameSchema = z.string().max(20)
+const bioSchema = z.string().max(250)
 
 userRouter.post("/signup", async (req, res)=>{
 
@@ -38,6 +39,7 @@ userRouter.post("/signup", async (req, res)=>{
         });
 
         if(existingUser){
+            console.log(existingUser);
             res.status(400).json({
                 message: "User already exists"
             });
@@ -56,6 +58,7 @@ userRouter.post("/signup", async (req, res)=>{
                     phone
                 }
             });
+
 
             const userProfile = await client.profile.create({
 
@@ -172,74 +175,74 @@ userRouter.post("/login", async (req, res)=>{
 });
 
 
-// userRouter.get("/profile", authMiddleWare, async ( req, res)=>{
+userRouter.get("/profile", authMiddleWare, async ( req, res)=>{
 
-//     try{
+  
+    const userId: any = req.headers.userId;
+ 
 
-//         // returns
-//         // username, firstName, lastName, email, phone, bio, profilepic, interests[], events[], socials[], projects[], roles[]
+    try{
 
-//         const {memberId} = req.body;
+        const profile:any = await client.profile.findUnique({
+            where:{
+                userId: userId
+            },
+            include:{
+                user: {
+                    select:{
+                        memberId: true,
+                        email: true,
+                        firstName: true,
+                        lastName: true,
+                        phone: true
+                    }
+                }
+            }
+        })
+
+        console.log(profile);
+
+        const payload = {
+
+            // user information
+            memberId: profile.user.memberId,
+            email: profile.user.email,
+            firstName: profile.user.firstName,
+            lastName: profile.user.lastName,
+            phone: profile.user.phone,
+            role: profile.user.role,
+            // profile information
+            bio: profile.bio,
+            profilePic: profile.profilePicture,
+            interests: profile.interests,
+            events: profile.events,
+            socials: profile.socials,
+            projects: profile.projects,
+            roles: profile.roles
+        }
     
-//         const profile = await client.user.findUnique({
-//             where:{
-//                 memberId
-//             }
+        return res.status(200).json(payload);
 
-//         })
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
 
-//         const info = await client.profile.findUnique({
-//             where:{
-//                 userId:memberId
-//             }
-//         })
-
-//         const payload = {
-//             memberId: profile.memberId,
-//             firstName: profile.firstName,
-//             lastName: profile.lastName,
-//             email: profile.email,
-//             phone: profile.phone,
-//             bio: info.bio,
-//             profilePic: info.profilePic,
-//             interests: info.interests,
-//             events: info.events,
-//             socials: info.socials,
-//             projects: info.projects,
-//             roles: info.roles
-//         }
-    
-//         const dummyLoad = {
-//             memberId: "123",
-//             firstName: "John",
-//             lastName: "Doe",
-//             email: "sanpi@gmial.com"
-//         }
-
-
-//         return res.status(200).json(payload);
+    }finally{
+        client.$disconnect();
+    }
 
 
 
-//     }catch(err){
-
-//     }finally{
-
-//     }
-
-
-
-// })
+})
 
 
 userRouter.put("/profile", authMiddleWare, async (req: Request, res:Response )=>{
 
     const {bio, profilePic, interests, events, socials, projects, roles} = await req.body;
-    var userId: any;
-
-    if(req.headers.userId != undefined ){
-        userId = req.headers.userId;
-    }
+  
+    const userId: any = req.headers.userId;
     
 
     try{
@@ -247,7 +250,7 @@ userRouter.put("/profile", authMiddleWare, async (req: Request, res:Response )=>
         const updatedProfile = await client.profile.update ({
         
             where:{
-                userId: parseInt(userId),
+                userId: userId,
 
             }, 
             data: {

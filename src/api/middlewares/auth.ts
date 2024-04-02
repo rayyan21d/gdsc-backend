@@ -23,6 +23,8 @@ async function authMiddleWare(req: Request, res: Response, next: NextFunction){
         }        
       
     
+    }else{
+        return res.json({message:"Unauthorized"})
     }
 }
 
